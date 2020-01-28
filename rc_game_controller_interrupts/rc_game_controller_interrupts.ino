@@ -11,18 +11,18 @@
 
 #include <Joystick.h>
 //#define SERIALPRINT
+
 #define UPDATE_RATE_MS 10
 #define RC_MIN_PULSE_US   1000
 #define RC_MID_PULSE_US   1500
 #define RC_MAX_PULSE_US   2000
 #define PULSE_IN_WAIT_US  25000 //RC Time Between Pulses 20000us 
 
-#define RC_PIN_CH1 2 //THR0
-#define RC_PIN_CH2 3 //AILE
-#define RC_PIN_CH3 4 //ELEV
-#define RC_PIN_CH4 5 //RUDD
-#define RC_PIN_CH5 6 //MODE
-#define RC_PIN_CH6 7 //AUX
+#define RC_PIN_CH1 0 //THR0
+#define RC_PIN_CH2 1 //AILE
+#define RC_PIN_CH3 2 //ELEV
+#define RC_PIN_CH4 3 //RUDD
+#define RC_PIN_CH5 7 //MODE
 
 #define BUTTON_1 8 //MODE
 #define BUTTON_2 9 //AUX
@@ -32,8 +32,6 @@
 #define CH_PITCH  RC_PIN_CH1
 #define CH_ROLL   RC_PIN_CH2
 #define CH_AUX_1  RC_PIN_CH5
-#define CH_AUX_2  RC_PIN_CH6
-
 
 #define JOY_THROTTLE_LOW  1000 
 #define JOY_THROTTLE_HIGH 2000 
@@ -49,14 +47,24 @@ Joystick_ Joystick(JOYSTICK_DEFAULT_REPORT_ID,JOYSTICK_TYPE_GAMEPAD,
   true, true, false,    // Rx,Ry,Rz
   true, true,             // rudder,throttle
   false, false, false);   // accelerator, brake, or steering
-  
+
+unsigned long input_thro_rising  = 0;
+unsigned long input_yaw_rising   = 0;
+unsigned long input_pitch_rising = 0;
+unsigned long input_roll_rising  = 0;
+unsigned long input_aux_1_rising = 0;
+
+unsigned long input_thro_falling  = 0;
+unsigned long input_yaw_falling   = 0;
+unsigned long input_pitch_falling = 0;
+unsigned long input_roll_falling  = 0;
+unsigned long input_aux_1_falling = 0;
 //RC Controller Values
-int16_t input_thro  = 0;
-int16_t input_yaw   = 0;
-int16_t input_pitch = 0;
-int16_t input_roll  = 0;
-int16_t input_aux_1 = 0;
-int16_t input_aux_2 = 0;
+unsigned long input_thro  = 0;
+unsigned long input_yaw   = 0;
+unsigned long input_pitch = 0;
+unsigned long input_roll  = 0;
+unsigned long input_aux_1 = 0;
 
 //Simulator Values
 int16_t sim_throttle = 0;
@@ -66,15 +74,76 @@ int16_t sim_y = 0;
 int16_t sim_aux_x = 0;
 int16_t sim_aux_y = 0;
 
+void CH_THRO_ISR(){
+  if(digitalRead(CH_THRO) == HIGH){
+    input_thro_rising = micros();
+  }
+  else{
+    input_thro_falling = micros();
+    if(input_thro_falling>input_thro_rising){//Check for overflow
+    input_thro = input_thro_falling-input_thro_rising;
+    }
+  }  
+}
+
+void CH_YAW_ISR(){
+  if(digitalRead(CH_YAW) == HIGH){
+    input_yaw_rising = micros();
+  }
+  else{
+    input_yaw_falling = micros();
+    if(input_yaw_falling>input_yaw_rising){ //Check for overflow
+    input_yaw = input_yaw_falling-input_yaw_rising;
+    }
+  }  
+}
+void CH_PITCH_ISR(){
+  if(digitalRead(CH_PITCH) == HIGH){
+    input_pitch_rising = micros();
+  }
+  else{
+    input_pitch_falling = micros();
+    if(input_pitch_falling>input_pitch_rising){//Check for overflow
+    input_pitch = input_pitch_falling-input_pitch_rising;
+    }
+  }  
+}
+void CH_ROLL_ISR(){
+  if(digitalRead(CH_ROLL) == HIGH){
+    input_roll_rising = micros();
+  }
+  else{
+    input_roll_falling = micros();
+    if(input_roll_falling>input_roll_rising){//Check for overflow
+    input_roll = input_roll_falling-input_roll_rising;
+    }
+  }  
+}
+void CH_AUX_1_ISR(){
+  if(digitalRead(CH_AUX_1) == HIGH){
+    input_aux_1_rising = micros();
+  }
+  else{
+    input_aux_1_falling = micros();
+    if(input_aux_1_falling>input_aux_1_rising){//Check for overflow
+    input_aux_1 = input_aux_1_falling-input_aux_1_rising;
+    }
+  }  
+}
+
 void setup() {
   pinMode(RC_PIN_CH1, INPUT); // Set our input pins as such
   pinMode(RC_PIN_CH2, INPUT);
   pinMode(RC_PIN_CH3, INPUT);
   pinMode(RC_PIN_CH4, INPUT);
   pinMode(RC_PIN_CH5, INPUT);
-  pinMode(RC_PIN_CH6, INPUT);
-  pinMode(BUTTON_1, INPUT);
-  pinMode(BUTTON_2, INPUT);
+  pinMode(BUTTON_1,   INPUT);
+  pinMode(BUTTON_2,   INPUT);
+  attachInterrupt(digitalPinToInterrupt(CH_THRO),   CH_THRO_ISR,  CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CH_YAW),    CH_YAW_ISR,   CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CH_PITCH),  CH_PITCH_ISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CH_ROLL),   CH_ROLL_ISR,  CHANGE);
+  attachInterrupt(digitalPinToInterrupt(CH_AUX_1),  CH_AUX_1_ISR, CHANGE);
 #ifdef SERIALPRINT
   Serial.begin(115200);
 #endif
@@ -90,13 +159,6 @@ void setup() {
 }
 
 void loop() {  
-  input_thro    = pulseIn(CH_THRO,  HIGH, PULSE_IN_WAIT_US); // Read the pulse width 
-  input_yaw     = pulseIn(CH_YAW,   HIGH, PULSE_IN_WAIT_US); // each channel
-  input_pitch   = pulseIn(CH_PITCH, HIGH, PULSE_IN_WAIT_US);
-  input_roll    = pulseIn(CH_ROLL,  HIGH, PULSE_IN_WAIT_US); 
-  input_aux_1   = pulseIn(CH_AUX_1, HIGH, PULSE_IN_WAIT_US); 
-  input_aux_2   = pulseIn(CH_AUX_2, HIGH, PULSE_IN_WAIT_US);
-
   sim_throttle =  map(input_thro,RC_MIN_PULSE_US,RC_MAX_PULSE_US,JOY_THROTTLE_LOW,JOY_THROTTLE_HIGH);
   Joystick.setThrottle(sim_throttle);
 #ifdef SERIALPRINT
@@ -125,12 +187,6 @@ void loop() {
   Joystick.setRxAxis(sim_aux_x);
 #ifdef SERIALPRINT
   Serial.print(sim_aux_x);
-  Serial.print("\t");
-#endif
-  sim_aux_y =     map(input_aux_2,RC_MIN_PULSE_US,RC_MAX_PULSE_US,JOY_RANGE_LOW,JOY_RANGE_HIGH);
-  Joystick.setRyAxis(sim_aux_y);
-#ifdef SERIALPRINT
-  Serial.print(sim_aux_y);
   Serial.println(); 
 #endif
   if(digitalRead(BUTTON_1)==LOW){
@@ -145,5 +201,5 @@ void loop() {
   else{
     Joystick.setButton(1,0);
   }
-  delay(UPDATE_RATE_MS);
+ delay(UPDATE_RATE_MS);
 }
