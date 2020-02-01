@@ -3,7 +3,7 @@
 
 See my Channel https://youtube.com/c/justbarran for more infomation on how I did this project. 
 
-You need a the arduino JoystickLibrary writen by MHeironimus. 
+You need the arduino JoystickLibrary writen by MHeironimus. 
 https://github.com/MHeironimus/ArduinoJoystickLibrary
 
 There are two versions of the code included. 
