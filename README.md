@@ -1,7 +1,7 @@
 # Arduino RC Radio PC Controller
  Code to use an arduino pro micro or arduino Due to read RC Radio reciever signals and push them to a computer as a PC Controller
 
-##Video
+## Video
 See my Channel https://youtube.com/c/justbarran for more infomation on how I did this project. 
 
 You need the arduino JoystickLibrary writen by MHeironimus. 
