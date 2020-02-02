@@ -80,7 +80,7 @@ void loop() {
   input_aux_2   = pulseIn(CH_AUX_2, HIGH, PULSE_IN_WAIT_US);
 
   sim_throttle =  map(input_thro,RC_MIN_PULSE_US,RC_MAX_PULSE_US,JOY_THROTTLE_LOW,JOY_THROTTLE_HIGH);
-  Serial.print(sim_throttle);
+  Serial.print(sim_throttle); 
   Serial.print("\t");    
 
   sim_rudder =    map(input_yaw,RC_MIN_PULSE_US,RC_MAX_PULSE_US,JOY_RUDDER_LOW,JOY_RUDDER_HIGH);

@@ -18,18 +18,20 @@
 #define RC_MAX_PULSE_US   2000
 #define PULSE_IN_WAIT_US  25000 //RC Time Between Pulses 20000us 
 
-#define RC_PIN_CH1 0 //THR0
-#define RC_PIN_CH2 1 //AILE
+//Pin to Channel
+#define RC_PIN_CH1 7 //THR0
+#define RC_PIN_CH2 3 //AILE
 #define RC_PIN_CH3 2 //ELEV
-#define RC_PIN_CH4 3 //RUDD
-#define RC_PIN_CH5 7 //MODE
+#define RC_PIN_CH4 0 //RUDD
+#define RC_PIN_CH5 1 //MODE
 
 #define BUTTON_1 8 //MODE
 #define BUTTON_2 9 //AUX
 
-#define CH_THRO   RC_PIN_CH3
+//Channel to Drone controls
+#define CH_THRO   RC_PIN_CH1
 #define CH_YAW    RC_PIN_CH4
-#define CH_PITCH  RC_PIN_CH1
+#define CH_PITCH  RC_PIN_CH3
 #define CH_ROLL   RC_PIN_CH2
 #define CH_AUX_1  RC_PIN_CH5
 
@@ -171,14 +173,14 @@ void loop() {
   Serial.print(sim_rudder);
   Serial.print("\t");
 #endif
-  sim_x =         map(input_pitch,RC_MIN_PULSE_US,RC_MAX_PULSE_US,JOY_RANGE_LOW,JOY_RANGE_HIGH);
-  Joystick.setXAxis(sim_x);
+  sim_y =         map(input_pitch,RC_MIN_PULSE_US,RC_MAX_PULSE_US,JOY_RANGE_LOW,JOY_RANGE_HIGH);
+  Joystick.setYAxis(sim_y);
 #ifdef SERIALPRINT
   Serial.print(sim_x);
   Serial.print("\t");
 #endif
-  sim_y =         map(input_roll,RC_MIN_PULSE_US,RC_MAX_PULSE_US,JOY_RANGE_LOW,JOY_RANGE_HIGH);
-  Joystick.setYAxis(sim_y);
+  sim_x =         map(input_roll,RC_MIN_PULSE_US,RC_MAX_PULSE_US,JOY_RANGE_LOW,JOY_RANGE_HIGH);
+  Joystick.setXAxis(sim_x);
 #ifdef SERIALPRINT
   Serial.print(sim_y);
   Serial.print("\t"); 
