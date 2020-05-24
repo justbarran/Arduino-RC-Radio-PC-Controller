@@ -12,7 +12,7 @@
 #include <Joystick.h>
 //#define SERIALPRINT
 
-#define UPDATE_RATE_MS 1
+#define UPDATE_RATE_MS 10
 #define RC_MIN_PULSE_US   1000
 #define RC_MID_PULSE_US   1500
 #define RC_MAX_PULSE_US   2000
